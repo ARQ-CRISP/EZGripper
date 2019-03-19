@@ -28,6 +28,9 @@
       <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
     </inertial>
     </link>
+    <gazebo reference="${prefix}_ezgripper_palm_link">
+      <material>Gazebo/BlueLaser</material>
+    </gazebo>
 
     <joint name="${prefix}_ezgripper_connect" type="fixed">
         <xacro:insert_block name="origin" />
@@ -54,6 +57,13 @@
 
     <gazebo_knuckle_jsp prefix="${prefix}" />
 
+    <joint name="${prefix}_ezgripper_ee_fixed_joint" type="fixed">
+      <parent link="${prefix}_ezgripper_palm_link" />
+      <child link = "eg_manipulator" />
+      <origin xyz="0.0 0.0 0.10" rpy="0.0 0.0 0.0" />
+    </joint>
+    <link name="eg_manipulator" />
+
 </xacro:macro>
 
 
@@ -76,6 +86,9 @@
         <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
       </inertial>
     </link>
+    <gazebo reference="${prefix}_ezgripper_finger_L1_${postfix}">
+      <material>Gazebo/White</material>
+    </gazebo>
 </xacro:macro>
 
 
@@ -98,6 +111,9 @@
         <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
       </inertial>
     </link>
+    <gazebo reference="${prefix}_ezgripper_finger_L2_${postfix}">
+      <material>Gazebo/White</material>
+    </gazebo>
 </xacro:macro>
 
 
@@ -152,7 +168,7 @@
 <xacro:macro name="gazebo_knuckle_jsp" params="prefix">
    <gazebo>
      <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
-       <jointName>${prefix}_ezgripper_knuckle_L1_L2_1,${prefix}_ezgripper_knuckle_L1_L2_2</jointName>
+       <jointName>${prefix}_ezgripper_knuckle_L1_L2_1,${prefix}_ezgripper_knuckle_L1_L2_2, ${prefix}_ezgripper_knuckle_palm_L1_1 </jointName>
      </plugin>
    </gazebo>
 </xacro:macro>
@@ -163,5 +179,3 @@
    </plugin>
 </gazebo>
 </robot>
-
-
