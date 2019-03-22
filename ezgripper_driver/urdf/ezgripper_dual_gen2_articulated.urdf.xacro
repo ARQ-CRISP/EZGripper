@@ -3,7 +3,13 @@
 
 <!--xacro:macro name="ezgripper" params="*origin"-->
 
+<material name="blue">
+    <color rgba = "0.19 0.22 0.99 1.0"/>
+</material>
 
+<material name="white">
+    <color rgba = "1.0 1.0 1.0 1.0"/>
+</material>
 
 <xacro:macro name="ezgripper_dual" params="prefix parent_link *origin">
 
@@ -16,6 +22,7 @@
         <geometry>
           <mesh filename="package://ezgripper_driver/meshes/ezgripper_gen2/SAKE_Palm_Dual_Gen2.stl"/>
         </geometry>
+        <material name="blue"/>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -60,7 +67,7 @@
     <joint name="${prefix}_ezgripper_ee_fixed_joint" type="fixed">
       <parent link="${prefix}_ezgripper_palm_link" />
       <child link = "eg_manipulator" />
-      <origin xyz="0.0 0.0 0.10" rpy="0.0 0.0 0.0" />
+      <origin xyz="0.083 0.0 0.0" rpy="1.570796325 3.14159265 1.570796325" />
     </joint>
     <link name="eg_manipulator" />
 
@@ -74,12 +81,14 @@
         <geometry>
           <mesh filename="package://ezgripper_driver/meshes/ezgripper_gen2/SAKE_Finger_L1_Gen2.stl"/>
         </geometry>
+        <material name="white"/>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="package://ezgripper_driver/meshes/ezgripper_gen2/SAKE_Finger_L1_Gen2.stl"/>
         </geometry>
+        <material name="white"/>
       </collision>
       <inertial>
         <mass value=".025"/>
@@ -99,12 +108,14 @@
         <geometry>
           <mesh filename="package://ezgripper_driver/meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
         </geometry>
+        <material name="white"/>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="package://ezgripper_driver/meshes/ezgripper_gen2/SAKE_Finger_L2_Gen2.stl"/>
         </geometry>
+        <material name="white"/>
       </collision>
       <inertial>
         <mass value=".025"/>
