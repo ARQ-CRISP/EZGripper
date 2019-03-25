@@ -12,10 +12,7 @@
 </material>
 
 <xacro:macro name="ezgripper_dual" params="prefix parent_link *origin">
-
-
     <!-- links -->
-
     <link name="${prefix}_ezgripper_palm_link">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -41,7 +38,6 @@
 
     <joint name="${prefix}_ezgripper_connect" type="fixed">
         <xacro:insert_block name="origin" />
-        <!-- <origin rpy="0 0 0" xyz="0.049 0.0 0.2"/> -->
         <parent link="${parent_link}"/>
         <child link="${prefix}_ezgripper_palm_link"/>
         <axis xyz="0 0 0"/>
@@ -60,7 +56,8 @@
     <ezgripper_knuckle_L1_L2 prefix="${prefix}" postfix="1" reflectY="1" reflectZ="1" reflectR="-1" mimic_test="false"/>
     <ezgripper_knuckle_L1_L2 prefix="${prefix}" postfix="2" reflectY="-1" reflectZ="1" reflectR="1" mimic_test="true"/>
 
-    <ezgripper_knuckle_trans prefix="${prefix}" postfix="L1_L2_1"/>
+    <ezgripper_knuckle_trans prefix="${prefix}" postfix="1"/>
+    <ezgripper_knuckle_trans prefix="${prefix}" postfix="2"/>
 
     <gazebo_knuckle_jsp prefix="${prefix}" />
 
@@ -127,13 +124,7 @@
     </gazebo>
 </xacro:macro>
 
-
-
-
-    <!-- joints -->
-
-
-
+<!-- joints -->
 <xacro:macro name="ezgripper_knuckle_palm_L1" params="prefix postfix reflectY reflectZ reflectR mimic_test">
     <joint name="${prefix}_ezgripper_knuckle_palm_L1_${postfix}" type="revolute">
       <parent link="${prefix}_ezgripper_palm_link"/>
@@ -141,9 +132,6 @@
       <origin xyz="0.072569 ${reflectY*0.03} 0" rpy="${-1.5708 * reflectR} 0 ${1.57075 * reflectR}"/>
       <axis xyz="0 1 0"/>
       <limit lower="0" upper="1.94" effort="1" velocity="3.67"/>
-      <xacro:if value="${mimic_test}">
-           <mimic joint="${prefix}_ezgripper_knuckle_palm_L1_1"/>
-      </xacro:if>
     </joint>
 </xacro:macro>
 
@@ -152,7 +140,6 @@
       <parent link="${prefix}_ezgripper_finger_L1_${postfix}"/>
       <child link="${prefix}_ezgripper_finger_L2_${postfix}"/>
       <origin xyz="0.052 0 0" rpy="0 0 0"/>
-      <!-- origin xyz="0.06 0 0" rpy="${3.14159 * reflectR} 0 0"/-->
       <axis xyz="0 1 0"/>
       <limit lower="0" upper="1.94" effort="1" velocity="3.67"/>
       <xacro:if value="${mimic_test}">
@@ -166,7 +153,7 @@
 <xacro:macro name="ezgripper_knuckle_trans" params="prefix postfix">
    <transmission name="${prefix}_ezgripper_trans_${postfix}">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}_ezgripper_knuckle_${postfix}">
+      <joint name="${prefix}_ezgripper_knuckle_palm_L1_${postfix}">
          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
       </joint>
       <actuator name="${prefix}_ezgripper_motor${postfix}">
@@ -179,14 +166,16 @@
 <xacro:macro name="gazebo_knuckle_jsp" params="prefix">
    <gazebo>
      <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
-       <jointName>${prefix}_ezgripper_knuckle_L1_L2_1,${prefix}_ezgripper_knuckle_L1_L2_2, ${prefix}_ezgripper_knuckle_palm_L1_1 </jointName>
+       <jointName>${prefix}_ezgripper_knuckle_L1_L2_1,${prefix}_ezgripper_knuckle_L1_L2_2, ${prefix}_ezgripper_knuckle_palm_L1_1, ${prefix}_ezgripper_knuckle_palm_L1_2 </jointName>
      </plugin>
    </gazebo>
 </xacro:macro>
 
 
 <gazebo>
-   <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-   </plugin>
+ <plugin name="ros_control" filename="libgazebo_ros_control.so">
+   <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+ </plugin>
 </gazebo>
+
 </robot>
