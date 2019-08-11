@@ -6,7 +6,7 @@
 
 
 <macro name="ezgripper_dual" params="prefix parent_link *origin">
- 
+
 
     <!-- links -->
 
@@ -77,7 +77,7 @@
       </inertial>
     </link>
 </macro>
- 
+
 
 <macro name="ezgripper_finger_L2" params="prefix postfix reflect">
     <link name="${prefix}_ezgripper_finger_L2_${postfix}">
@@ -99,7 +99,7 @@
       </inertial>
     </link>
 </macro>
- 
+
 
 
 
@@ -139,11 +139,11 @@
    <transmission name="${prefix}_ezgripper_trans_${postfix}">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="${prefix}_ezgripper_knuckle_${postfix}">
-         <hardwareInterface>PositionJointInterface</hardwareInterface>
+         <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
       </joint>
       <actuator name="${prefix}_ezgripper_motor${postfix}">
          <mechanicalReduction>1</mechanicalReduction>
-         <hardwareInterface>PositionJointInterface</hardwareInterface>
+         <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
       </actuator>
    </transmission>
 </macro>
@@ -162,5 +162,3 @@
    </plugin>
 </gazebo>
 </robot>
-
-

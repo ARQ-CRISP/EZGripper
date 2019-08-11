@@ -2,7 +2,7 @@
 <robot name="ezgripper" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
 <macro name="ezgripper_quad" params="prefix parent_link *origin">
- 
+
     <!-- links -->
 
     <link name="${prefix}_ezgripper_palm_link">
@@ -49,7 +49,7 @@
     <ezgripper_knuckle_trans prefix="${prefix}" postfix="2"/>
     <ezgripper_knuckle_trans prefix="${prefix}" postfix="3"/>
     <ezgripper_knuckle_trans prefix="${prefix}" postfix="4"/>
- 
+
     <gazebo_knuckle_jsp prefix="${prefix}" />
 
 
@@ -76,7 +76,7 @@
       </inertial>
     </link>
 </macro>
- 
+
 
     <!-- joints -->
 
@@ -101,11 +101,11 @@
    <transmission name="${prefix}_ezgripper_trans_${postfix}">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="${prefix}_ezgripper_knuckle_${postfix}">
-         <hardwareInterface>PositionJointInterface</hardwareInterface>
+         <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
       </joint>
       <actuator name="${prefix}_ezgripper_motor${postfix}">
          <mechanicalReduction>1</mechanicalReduction>
-         <hardwareInterface>PositionJointInterface</hardwareInterface>
+         <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
       </actuator>
    </transmission>
 </macro>
@@ -120,9 +120,7 @@
 
 <gazebo>
    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-       
+
    </plugin>
 </gazebo>
 </robot>
-
-
