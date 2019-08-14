@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <robot name="ezgripper" xmlns:xacro="http://ros.org/wiki/xacro">
 
-<!--xacro:macro name="ezgripper" params="*origin"-->
-
 <material name="blue">
     <color rgba = "0.19 0.22 0.99 1.0"/>
 </material>
@@ -53,13 +51,15 @@
     <ezgripper_knuckle_palm_L1 prefix="${prefix}" postfix="1" reflectY="1" reflectZ="1" reflectR="1" mimic_test="false"/>
     <ezgripper_knuckle_palm_L1 prefix="${prefix}" postfix="2" reflectY="-1" reflectZ="1" reflectR="-1" mimic_test="true"/>
 
+    <mimic_joint_plugin_gazebo prefix="${prefix}"/>
+
     <ezgripper_knuckle_L1_L2 prefix="${prefix}" postfix="1" reflectY="1" reflectZ="1" reflectR="-1" mimic_test="false"/>
     <ezgripper_knuckle_L1_L2 prefix="${prefix}" postfix="2" reflectY="-1" reflectZ="1" reflectR="1" mimic_test="true"/>
 
-    <ezgripper_knuckle_trans prefix="${prefix}" postfix="1"/>
-    <ezgripper_knuckle_trans prefix="${prefix}" postfix="2"/>
+    <ezgripper_knuckle_trans prefix="${prefix}" postfix="palm_L1_1"/>
 
     <gazebo_knuckle_jsp prefix="${prefix}" />
+
 
     <joint name="${prefix}_ezgripper_ee_fixed_joint" type="fixed">
       <parent link="${prefix}_ezgripper_palm_link" />
@@ -132,6 +132,9 @@
       <origin xyz="0.072569 ${reflectY*0.03} 0" rpy="${-1.5708 * reflectR} 0 ${1.57075 * reflectR}"/>
       <axis xyz="0 1 0"/>
       <limit lower="0" upper="1.94" effort="1" velocity="3.67"/>
+      <xacro:if value="${mimic_test}">
+          <mimic joint="${prefix}_ezgripper_knuckle_palm_L1_1" multiplier="1.0" offset="0.0"/>
+      </xacro:if>
     </joint>
 </xacro:macro>
 
@@ -143,34 +146,46 @@
       <axis xyz="0 1 0"/>
       <limit lower="0" upper="1.94" effort="1" velocity="3.67"/>
       <xacro:if value="${mimic_test}">
-           <mimic joint="${prefix}_ezgripper_knuckle_L1_L2_1"/>
+           <mimic joint="${prefix}_ezgripper_knuckle_L1_L2_1" multiplier="1.0" offset="0.0"/>
       </xacro:if>
     </joint>
 </xacro:macro>
 
     <!-- transmissions for Gazebo -->
 
-<xacro:macro name="ezgripper_knuckle_trans" params="prefix postfix">
-   <transmission name="${prefix}_ezgripper_trans_${postfix}">
-      <type>transmission_interface/SimpleTransmission</type>
-      <joint name="${prefix}_ezgripper_knuckle_palm_L1_${postfix}">
-         <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      </joint>
-      <actuator name="${prefix}_ezgripper_motor${postfix}">
-         <mechanicalReduction>1</mechanicalReduction>
-         <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      </actuator>
-   </transmission>
-</xacro:macro>
+    <xacro:macro name="ezgripper_knuckle_trans" params="prefix postfix">
+       <transmission name="${prefix}_ezgripper_trans_${postfix}">
+          <type>transmission_interface/SimpleTransmission</type>
+          <joint name="${prefix}_ezgripper_knuckle_${postfix}">
+             <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          </joint>
+          <actuator name="${prefix}_ezgripper_motor${postfix}">
+             <mechanicalReduction>1</mechanicalReduction>
+             <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          </actuator>
+       </transmission>
+    </xacro:macro>
 
-<xacro:macro name="gazebo_knuckle_jsp" params="prefix">
-   <gazebo>
-     <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
-       <jointName>${prefix}_ezgripper_knuckle_palm_L1_1, ${prefix}_ezgripper_knuckle_palm_L1_2 </jointName>
-     </plugin>
-   </gazebo>
-</xacro:macro>
+    <xacro:macro name="gazebo_knuckle_jsp" params="prefix">
+       <gazebo>
+         <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
+           <jointName>${prefix}_ezgripper_knuckle_palm_L1_1</jointName>
+         </plugin>
+       </gazebo>
+    </xacro:macro>
 
+<xacro:macro name="mimic_joint_plugin_gazebo" params="prefix">
+  <gazebo>
+    <plugin name="mimic_joint_plugin" filename="libroboticsgroup_gazebo_mimic_joint_plugin.so">
+      <joint>${prefix}_ezgripper_knuckle_palm_L1_1</joint>
+      <mimicJoint>${prefix}_ezgripper_knuckle_palm_L1_2</mimicJoint>
+      <multiplier>1.0</multiplier>
+      <offset>0</offset>
+      <sensitiveness>0.0</sensitiveness>   <!-- if absolute difference between setpoint and process value is below this threshold, do nothing; 0.0 = disable [rad] -->
+      <maxEffort>1.0</maxEffort>
+    </plugin>
+  </gazebo>
+</xacro:macro>
 
 <gazebo>
  <plugin name="ros_control" filename="libgazebo_ros_control.so">
