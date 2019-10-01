@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
-#####################################################################
+#
 # Software License Agreement (BSD License)
 #
 # Copyright (c) 2015, SAKE Robotics
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #
@@ -29,10 +29,10 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-##
+#
 
-#  
-#  If you want to modify this program, you can find the "Main program" and 
+#
+#  If you want to modify this program, you can find the "Main program" and
 #  "Main loop" by searching for these terms.  They exist near the end of this file.
 #
 
@@ -52,16 +52,19 @@ def calibrate_srv(gripper, msg):
     rospy.loginfo("Calibrate service: request completed")
     return EmptyResponse()
 
+
 class GripperActionServer:
+
     def __init__(self, action_name, gripper):
         self.gripper = gripper
-        self.action_server = actionlib.SimpleActionServer(action_name, GripperCommandAction, self.gripper_action_execute, False)
+        self.action_server = actionlib.SimpleActionServer(
+            action_name, GripperCommandAction, self.gripper_action_execute, False)
         self.action_server.start()
-        
+
     def gripper_action_execute(self, goal):
-        rospy.loginfo("Execute goal: position=%.1f, max_effort=%.1f"%
+        rospy.loginfo("Execute goal: position=%.1f, max_effort=%.1f" %
                       (goal.command.position, goal.command.max_effort))
-        
+
         if goal.command.max_effort == 0.0:
             rospy.loginfo("Release torque: start")
             self.gripper.release()
@@ -72,27 +75,28 @@ class GripperActionServer:
             rospy.loginfo("Go to position: done")
 
         result = GripperCommandResult()
-        result.position = goal.command.position #not necessarily the current position of the gripper if the gripper did not reach its goal position.
+        result.position = goal.command.position  # not necessarily the current position of the gripper if the gripper did not reach its goal position.
         result.effort = goal.command.max_effort
         result.stalled = False
         result.reached_goal = True
         self.action_server.set_succeeded(result)
-    
+
+
 def send_diags():
     # See diagnostics with: rosrun rqt_runtime_monitor rqt_runtime_monitor
     msg = DiagnosticArray()
     msg.status = []
     msg.header.stamp = rospy.Time.now()
-    
+
     for gripper in grippers:
         for servo in gripper.servos:
             status = DiagnosticStatus()
-            status.name = "Gripper '%s' servo %d"%(gripper.name, servo.servo_id)
-            status.hardware_id = '%s'%servo.servo_id
+            status.name = "Gripper '%s' servo %d" % (gripper.name, servo.servo_id)
+            status.hardware_id = '%s' % servo.servo_id
             temperature = servo.read_temperature()
             status.values.append(KeyValue('Temperature', str(temperature)))
             status.values.append(KeyValue('Voltage', str(servo.read_voltage())))
-    
+
             if temperature >= 70:
                 status.level = DiagnosticStatus.ERROR
                 status.message = 'OVERHEATING'
@@ -102,9 +106,9 @@ def send_diags():
             else:
                 status.level = DiagnosticStatus.OK
                 status.message = 'OK'
-        
+
             msg.status.append(status)
-    
+
     diagnostics_pub.publish(msg)
 
 
@@ -131,15 +135,15 @@ for gripper_name, servo_ids in gripper_params.iteritems():
 
     gripper.calibrate()
     gripper.open()
-    
-    references.append( rospy.Service('~'+gripper_name+'/calibrate', Empty, partial(calibrate_srv, gripper)) )
-    references.append( GripperActionServer('~'+gripper_name, gripper) )
-    
+
+    references.append(rospy.Service('~' + gripper_name + '/calibrate', Empty, partial(calibrate_srv, gripper)))
+    references.append(GripperActionServer('~' + gripper_name, gripper))
+
     grippers.append(gripper)
 
 # Main Loop
 
-r = rospy.Rate(20) # hz
+r = rospy.Rate(20)  # hz
 diags_last_sent = 0
 while not rospy.is_shutdown():
     now = rospy.get_time()
@@ -148,15 +152,15 @@ while not rospy.is_shutdown():
             send_diags()
             diags_last_sent = now
         except Exception, e:
-            rospy.logerr("Exception while reading diagnostics: %s"%e)
-            
+            rospy.logerr("Exception while reading diagnostics: %s" % e)
+
     for servo in all_servos:
         try:
             servo.check_overload_and_recover()
         except Exception, e:
-            rospy.logerr("Exception while checking overload: %s"%e)
+            rospy.logerr("Exception while checking overload: %s" % e)
             servo.flushAll()
 
     r.sleep()
-    
+
 rospy.loginfo("Exiting")
