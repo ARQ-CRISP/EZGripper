@@ -1,9 +1,12 @@
 #!/usr/bin/python
 
 import rospy
-from ezgripper_libs.ezgripper import EZGripper
+from ezgripper_libs.ezgripper_interface_framework import EZGripper
 import actionlib
 from smart_manipulation_framework_core.msg import GraspResult, GraspAction, GraspFeedback
+from sensor_msgs.msg import JointState
+from std_msgs.msg import Header
+import thread
 
 
 class EzGripperActionServer(object):
@@ -35,7 +38,9 @@ class EzGripperActionServer(object):
         self.action_server.register_preempt_callback(self.preempt_callback)
         # Start the server
         self.action_server.start()
-        rospy.loginfo("EzGripper calibrated and ready to receive commands")
+        # Start another thread in which we publish continuously the joint state if the gripper
+        thread.start_new_thread(self.publish_joint_state, ())
+        rospy.loginfo("EZGripper ready to receive commands")
 
     def goal_callback(self):
         """
@@ -89,6 +94,28 @@ class EzGripperActionServer(object):
         """
         rospy.loginfo("Action preempted")
         self.action_server.set_preempted()
+
+    def publish_joint_state(self):
+        """
+            Publish continuously the gripper's joint state in order to be able to correctly plan and avoid collision
+        """
+        # Define the publisher (the topic name is standard)
+        pub = rospy.Publisher('/joint_states', JointState, queue_size=10)
+        # In order to avoid overloading the gripper with too many reading/writing commands, limit the reading at 200Hz
+        rate = rospy.Rate(200)
+        # Initialise a JointState message with the proper joint name
+        joint_state_message = JointState()
+        joint_state_message.header = Header()
+        joint_state_message.name = ["ezgripper_knuckle_palm_L1_1"]
+        joint_state_message.velocity = []
+        joint_state_message.effort = []
+        # While the node is running publish an updated message
+        while not rospy.is_shutdown():
+            joint_state_message.header.stamp = rospy.Time.now()
+            joint_state_message.position = [self.gripper.get_joint_value()]
+            pub.publish(joint_state_message)
+            rate.sleep()
+
 
 if __name__ == '__main__':
     rospy.init_node('ezgripper_action_server', anonymous=True)
