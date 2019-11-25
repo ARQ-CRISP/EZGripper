@@ -57,6 +57,8 @@
         <ezgripper_knuckle_L1_L2 prefix="${prefix}" postfix="2" reflectY="-1" reflectZ="1" reflectR="1" mimic_test="true"/>
 
         <ezgripper_knuckle_trans prefix="${prefix}" postfix="palm_L1_1"/>
+        <!-- Comment this line if you want to make it compatible with Gazebo7! -->
+        <ezgripper_knuckle_trans prefix="${prefix}" postfix="palm_L1_2"/>
 
         <gazebo_knuckle_jsp prefix="${prefix}" />
 
