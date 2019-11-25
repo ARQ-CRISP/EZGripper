@@ -90,7 +90,7 @@ class EzGripperActionServer(object):
 
     def preempt_callback(self):
         """
-            Callback executed when a prrempt request has been received.
+            Callback executed when a preempt request has been received.
         """
         rospy.loginfo("Action preempted")
         self.action_server.set_preempted()

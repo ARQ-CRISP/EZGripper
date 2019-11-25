@@ -42,7 +42,7 @@ class EZGripper(Gripper):
 
             @return: Float corresponding to the dynamixel value
         """
-        return round(-(self.GRIP_MAX / self.JOINT_LIMIT) * joint_value + self.GRIP_MAX)
+        return int(round(-(self.GRIP_MAX / self.JOINT_LIMIT) * joint_value + self.GRIP_MAX))
 
     def get_joint_value(self):
         """
