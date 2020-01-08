@@ -3,7 +3,7 @@
 import rospy
 from ezgripper_libs.ezgripper_interface_framework import EZGripper
 import actionlib
-from smart_manipulation_framework_core.msg import GraspResult, GraspAction, GraspFeedback
+from modular_framework_core.msg import GraspResult, GraspAction, GraspFeedback
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
 import thread
@@ -48,18 +48,7 @@ class EzGripperActionServer(object):
         """
         # Get the grasp command field, containing all information required to execute a grasp
         goal_grasp_command = self.action_server.accept_new_goal().grasp_command
-        # Check that the max torque is at least 100, otherwise the gripper doesn't move
-        if goal_grasp_command.max_torque < 100:
-            rospy.logerr("The provided maximum torque should be at least 100, otherwise the gripper will not move")
-            # Fill the message and publishes the result (fail) and exit the callback
-            self.result_message.pregrasped.data = False
-            self.result_message.grasped.data = False
-            self.result_message.postgrasped.data = False
-            self.action_server.set_aborted(self.result_message)
-            return
 
-        # Set the maximum torque the EZGripper can use (800 is the limit)
-        self.gripper.set_max_torque(goal_grasp_command.max_torque)
         # Extract the manipulator state depending on the received grasp state
         if goal_grasp_command.grasp_state == 0:
             manipulator_state = goal_grasp_command.grasp.pregrasp
@@ -69,8 +58,8 @@ class EzGripperActionServer(object):
             manipulator_state = goal_grasp_command.grasp.postgrasp
 
         # Set the torque to be applied after the gripper achieves the desired joint state
-        self.gripper.set_torque_hold(goal_grasp_command.grasp.torque_intensity.torque_intensity[0] * 100)
-        # Move the gripper to the joint state contained in the goal received with half the maximum speed.
+        self.gripper.set_torque_percentage(goal_grasp_command.grasp.torque_intensity.torque_intensity[0])
+        # Move the gripper to the joint state contained in the goal received with maximum speed.
         # Once the gripper has finished to move torque is applied to hold the object
         self.gripper.go_to_joint_value(manipulator_state.posture.position[0], 100)
 
@@ -119,7 +108,7 @@ class EzGripperActionServer(object):
 
 if __name__ == '__main__':
     rospy.init_node('ezgripper_action_server', anonymous=True)
-    action_server = EzGripperActionServer(rospy.get_param("action_server_name"), rospy.get_param("manipulator_name"),
-                                          rospy.get_param("port_name"), rospy.get_param("baudrate"),
-                                          rospy.get_param("servo_ids"))
+    action_server = EzGripperActionServer(rospy.get_param("manipulator_controller_action_server_name"),
+                                          rospy.get_param("manipulator_name"), rospy.get_param("port_name"),
+                                          rospy.get_param("baudrate"), rospy.get_param("servo_ids"))
     rospy.spin()

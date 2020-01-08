@@ -28,8 +28,10 @@ class EZGripper(Gripper):
         self.open()
         # Joint limit (in radians) of the servo motor
         self.JOINT_LIMIT = 1.94
+        # Set teh maximum percentage of the max torque that can be loaded to hold the object without overloading
+        self.MAX_TORQUE_HOLD = 50
         # Overwrites the value of TORQUE_HOLD from the Gripper class
-        self.TORQUE_HOLD = 0
+        self.TORQUE_HOLD = 50
         # Length of the finger and offset between the base of each finger (in cm) in order
         # to compute the proper command for having a given aperture (the values come from the documentation)
         self.FINGER_LENGTH = 11.157
@@ -69,6 +71,8 @@ class EZGripper(Gripper):
             Send a command to move the dynamixel to a certain position
             @param position: Position the Dynamixel should reach (not joint value)
         """
+        # Without this, the dynamixel always outputs some overload issue
+        self.servos[0].write_address(70, [0])
         # Send the proper dynamixel command
         self.servos[0].write_word(30, self.zero_positions[0] + position)
         # Blocking loop waiting for the hand of the movement
@@ -96,16 +100,17 @@ class EZGripper(Gripper):
         # And execute the joint
         self.go_to_joint_value(joint_value, closing_effort)
 
-    def set_torque_hold(self, torque_value):
+    def set_torque_intensity(self, torque_intensity):
         """
-            Set the value of the effort exerted by the gripper to hold the object (after the grasp)
-            @param torque_value: Value of the effort the gripper will apply when holding an object
+            Set the intensity of the effort exerted by the gripper to hold the object (after the grasp)
+            @param torque_intensity: Intensity (0 - 1) of the max effort the gripper will apply when holding an object
         """
-        self.TORQUE_HOLD = torque_value
+        # To avoid any overload issue, the max TORQUE_HOLD can only be 400 (which is 50% of the max torque).
+        # So scale it to that value
+        self.TORQUE_HOLD = torque_intensity * self.MAX_TORQUE_HOLD
 
-    def set_max_torque(self, max_torque):
+    def release_torque(self):
         """
-            Set the maximum value of the effort exerted by the gripper
-            @param max_torque: Maximum effort the gripper can exert
+            Turn off the torque mode, and get back to the "compliant" mode i.e you can move the fingers manually
         """
-        self.TORQUE_MAX = max_torque
+        self.servos[0].write_address(24, [0])
