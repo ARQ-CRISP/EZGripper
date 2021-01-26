@@ -1,0 +1,9 @@
+# Goal definition
+GripperCommand input
+---
+# Result definition
+int8 outcome
+bool returned_object
+---
+# Feedback definition
+sensor_msgs/JointState current_joint_state

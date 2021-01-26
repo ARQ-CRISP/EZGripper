@@ -3,7 +3,7 @@
 import rospy
 from ezgripper_libs.ezgripper_interface_framework import EZGripper
 import actionlib
-from modular_framework_core.msg import GraspResult, GraspAction, GraspFeedback
+from ezgripper_driver.msg import ActuateGripperResult, ActuateGripperAction, ActuateGripperFeedback
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
 import thread
@@ -28,10 +28,10 @@ class EzGripperActionServer(object):
         """
         # Initialise the object allowing to control the EZGripper
         self.gripper = EZGripper(gripper_id, port_name, baudrate, servo_ids)
-        # Initialise a GraspResult message
-        self.result_message = GraspResult()
+        # Initialise a ActuateGripperResult message
+        self.result_message = ActuateGripperResult()
         # Initialise the action server
-        self.action_server = actionlib.SimpleActionServer(action_server_name, GraspAction, auto_start=False)
+        self.action_server = actionlib.SimpleActionServer(action_server_name, ActuateGripperAction, auto_start=False)
         # Set the callback to be executed when a goal is received
         self.action_server.register_goal_callback(self.goal_callback)
         # Set the callback that should be executed when a preempt request is received
@@ -46,25 +46,27 @@ class EzGripperActionServer(object):
         """
             Callback executed when a goal is received. Execute the grasp contained in the message
         """
-        # Get the grasp command field, containing all information required to execute a grasp
-        goal_grasp_command = self.action_server.accept_new_goal().grasp_command
+        # Get the graspgripper command field, containing all information required to execute a grasp
+        gripper_command = self.action_server.accept_new_goal().input
 
-        # Extract the manipulator state depending on the received grasp state
-        if goal_grasp_command.grasp_state == 0:
-            manipulator_state = goal_grasp_command.grasp.pregrasp
-        elif goal_grasp_command.grasp_state == 1:
-            manipulator_state = goal_grasp_command.grasp.grasp
-        else:
-            manipulator_state = goal_grasp_command.grasp.postgrasp
+        # Make sure the command is valid, otherwise return outcome 1
+        is_torque_between_0_and_1 = gripper_command.torque_intensity > 0 and gripper_command.torque_intensity <= 1
+        is_position_positive = gripper_command.target_joint_state.position[0] > 0
+        if not (is_position_positive and is_torque_between_0_and_1):
+            # Send a result message containing a failure
+            self.result_message.outcome = 1
+            self.result_message.returned_object = False
+            self.action_server.set_aborted(self.result_message)
+            return
 
         # Set the torque to be applied after the gripper achieves the desired joint state
-        self.gripper.set_torque_percentage(goal_grasp_command.grasp.torque_intensity.torque_intensity[0])
+        self.gripper.set_torque_percentage(gripper_command.torque_intensity)
         # Move the gripper to the joint state contained in the goal received with maximum speed.
         # Once the gripper has finished to move torque is applied to hold the object
-        self.gripper.go_to_joint_value(manipulator_state.posture.position[0], 100)
+        self.gripper.go_to_joint_value(gripper_command.target_joint_state.position[0], 100)
 
-        # Initialise and fill a GraspFeedback message
-        action_feedback = GraspFeedback()
+        # Initialise and fill a ActuateGripperFeedback message
+        action_feedback = ActuateGripperFeedback()
         action_feedback.current_joint_state.header.stamp = rospy.Time.now()
         action_feedback.current_joint_state.name = ["ezgripper_joint"]
         action_feedback.current_joint_state.position = [self.gripper.get_joint_value()]
@@ -72,9 +74,8 @@ class EzGripperActionServer(object):
         self.action_server.publish_feedback(action_feedback)
 
         # Send a result message containing a success
-        self.result_message.pregrasped.data = goal_grasp_command.grasp_state == 0
-        self.result_message.grasped.data = goal_grasp_command.grasp_state == 1
-        self.result_message.postgrasped.data = goal_grasp_command.grasp_state == 2
+        self.result_message.outcome = 0
+        self.result_message.returned_object = True
         self.action_server.set_succeeded(self.result_message)
 
     def preempt_callback(self):
@@ -108,7 +109,5 @@ class EzGripperActionServer(object):
 
 if __name__ == '__main__':
     rospy.init_node('ezgripper_action_server', anonymous=True)
-    action_server = EzGripperActionServer(rospy.get_param("manipulator_controller_action_server_name"),
-                                          rospy.get_param("manipulator_name"), rospy.get_param("port_name"),
-                                          rospy.get_param("baudrate"), rospy.get_param("servo_ids"))
+    action_server = EzGripperActionServer("ezgripper_controller", "EZGripper", "/dev/ttyUSB0", 57600, [1])
     rospy.spin()

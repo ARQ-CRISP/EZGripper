@@ -1,0 +1,2 @@
+sensor_msgs/JointState target_joint_state
+float64 torque_intensity

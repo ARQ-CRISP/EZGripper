@@ -49,6 +49,8 @@ class EZGripper(Gripper):
     def get_joint_value(self):
         """
             Read the dynamixel's value and convert it to a joint angle value
+
+            @return: Float between 0 and JOINT_LIMIT
         """
         dynamixel_value = self.servos[0].read_word_signed(36) - self.zero_positions[0]
 
@@ -57,6 +59,7 @@ class EZGripper(Gripper):
     def go_to_joint_value(self, joint_value, closing_effort):
         """
             Move the gripper to a stated joint angle with a specified closing effort
+
             @param joint_value: Desired joint value
             @param closing_effort: Effort exerted by the gripper while closing
         """
@@ -69,6 +72,7 @@ class EZGripper(Gripper):
     def _go_to_servo_position(self, position):
         """
             Send a command to move the dynamixel to a certain position
+
             @param position: Position the Dynamixel should reach (not joint value)
         """
         # Without this, the dynamixel always outputs some overload issue
@@ -92,6 +96,7 @@ class EZGripper(Gripper):
     def go_to_aperture(self, aperture_width, closing_effort):
         """
             Move the gripper to a given aperture with a specified closing effort
+
             @param aperture_width: Aperture the gripper should reach
             @param closing_effort: Effort exerted by the gripper while closing
         """
@@ -103,6 +108,7 @@ class EZGripper(Gripper):
     def set_torque_intensity(self, torque_intensity):
         """
             Set the intensity of the effort exerted by the gripper to hold the object (after the grasp)
+
             @param torque_intensity: Intensity (0 - 1) of the max effort the gripper will apply when holding an object
         """
         # To avoid any overload issue, the max TORQUE_HOLD can only be 400 (which is 50% of the max torque).
